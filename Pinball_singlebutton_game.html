@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single-Button Pinball - Slower Velocity Edition</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #111;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .phone-frame {
+            background-color: #1c1c1e;
+            padding: 16px;
+            border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.1);
+            border: 3px solid #3a3a3c;
+        }
+
+        canvas {
+            border-radius: 24px;
+            background-color: #0d0d0d;
+            display: block;
+            cursor: pointer;
+        }
+
+        .instructions {
+            margin-top: 14px;
+            font-size: 0.85rem;
+            color: #8e8e93;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone-frame">
+        <!-- iPhone Pro Aspect Ratio Canvas: 390 x 844 -->
+        <canvas id="gameCanvas" width="390" height="644"></canvas>
+    </div>
+    <div class="instructions">Balls move at a smoother, slower speed for better reaction control!</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        let score = 0;
+        let highScore = 0;
+        let isGameOver = false;
+        let nextBallThreshold = 10;
+
+        // Control mechanics state
+        let spinDirection = 1;
+        let isHolding = false;
+        let targetAngleOffset = 0;
+        let currentAngleOffset = 0;
+
+        // Balls array & Incoming Spawns Queue
+        let balls = [];
+        let pendingSpawns = [];
+
+        // Obstacle properties pivoted at one end
+        let obstacle = {
+            pivotX: 100,
+            pivotY: 550,
+            width: 290,
+            height: 17,
+            baseAngle: -0.2
+        };
+
+        function queueNewBall() {
+            pendingSpawns.push({
+                x: 195 + (Math.random() * 100 - 50),
+                y: 120,
+                timer: 60
+            });
+        }
+
+        function resetGame() {
+            score = 0;
+            nextBallThreshold = 10;
+            isGameOver = false;
+            balls = [];
+            pendingSpawns = [];
+            balls.push({
+                x: 195,
+                y: 120,
+                vx: 0,
+                vy: 1.2, // Slower initial drop speed
+                radius: 11,
+                gravity: 0.16, // Reduced gravity for floating, slower fall
+                bounce: -0.82, // Softer wall bounciness
+                history: []
+            });
+        }
+
+        function triggerAction() {
+            if (isGameOver) {
+                resetGame();
+            } else {
+                spinDirection *= -1;
+                targetAngleOffset += (Math.PI * 2) * spinDirection;
+            }
+        }
+
+        // Input Listeners
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!isHolding) {
+                    isHolding = true;
+                    triggerAction();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                isHolding = false;
+            }
+        });
+
+        canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            if (!isHolding) {
+                isHolding = true;
+                triggerAction();
+            }
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            isHolding = false;
+        });
+
+        function checkObstacleCollision(ball) {
+            let currentTotalAngle = obstacle.baseAngle + currentAngleOffset;
+
+            let cos = Math.cos(-currentTotalAngle);
+            let sin = Math.sin(-currentTotalAngle);
+            let bx = ball.x - obstacle.pivotX;
+            let by = ball.y - obstacle.pivotY;
+            let rx = cos * bx - sin * by;
+            let ry = sin * bx + cos * by;
+
+            if (rx > -ball.radius &&
+                rx < obstacle.width + ball.radius &&
+                ry > -obstacle.height / 2 - ball.radius &&
+                ry < obstacle.height / 2 + ball.radius) {
+
+                let snapVelocity = Math.abs(targetAngleOffset - currentAngleOffset);
+                let snapSpeed = (targetAngleOffset - currentAngleOffset) * 0.4;
+
+                // Scaled down upward bounce force to match slower overall speed
+                ball.vy = -8.5 + (snapSpeed * -7);
+                ball.vx += (rx / obstacle.width) * 4.5;
+
+                if (snapVelocity > 0.01) {
+                    score += 1;
+
+                    if (score >= nextBallThreshold) {
+                        queueNewBall();
+                        nextBallThreshold += 10;
+                    }
+                }
+
+                let clampedRx = Math.max(0, Math.min(obstacle.width, rx));
+                let outX = obstacle.pivotX + Math.cos(currentTotalAngle) * clampedRx - Math.sin(currentTotalAngle) * (Math.sign(ry || 1) * (obstacle.height / 2 + ball.radius));
+                let outY = obstacle.pivotY + Math.sin(currentTotalAngle) * clampedRx + Math.cos(currentTotalAngle) * (Math.sign(ry || 1) * (obstacle.height / 2 + ball.radius));
+                ball.x = outX;
+                ball.y = outY;
+            }
+        }
+
+        function update() {
+            if (!isGameOver) {
+                currentAngleOffset += (targetAngleOffset - currentAngleOffset) * 0.18;
+
+                for (let i = pendingSpawns.length - 1; i >= 0; i--) {
+                    pendingSpawns[i].timer--;
+                    if (pendingSpawns[i].timer <= 0) {
+                        balls.push({
+                            x: pendingSpawns[i].x,
+                            y: pendingSpawns[i].y,
+                            vx: (Math.random() - 0.5) * 4,
+                            vy: 1.2,
+                            radius: 11,
+                            gravity: 0.16,
+                            bounce: -0.82,
+                            history: []
+                        });
+                        pendingSpawns.splice(i, 1);
+                    }
+                }
+
+                for (let i = balls.length - 1; i >= 0; i--) {
+                    let ball = balls[i];
+
+                    ball.history.unshift({ x: ball.x, y: ball.y });
+                    if (ball.history.length > 12) {
+                        ball.history.pop();
+                    }
+
+                    ball.vy += ball.gravity;
+                    ball.x += ball.vx;
+                    ball.y += ball.vy;
+
+                    if (ball.x - ball.radius < 0) {
+                        ball.x = ball.radius;
+                        ball.vx *= ball.bounce;
+                    } else if (ball.x + ball.radius > canvas.width) {
+                        ball.x = canvas.width - ball.radius;
+                        ball.vx *= ball.bounce;
+                    }
+
+                    if (ball.y - ball.radius < 0) {
+                        ball.y = ball.radius;
+                        ball.vy *= ball.bounce;
+                    }
+
+                    checkObstacleCollision(ball);
+
+                    if (ball.y - ball.radius > canvas.height + 200) {
+                        isGameOver = true;
+                        if (score > highScore) highScore = score;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // --- MASSIVE BACKGROUND SCORE ---
+            ctx.save();
+            ctx.font = 'bold 160px -apple-system, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(score, canvas.width / 2, canvas.height / 2 - 40);
+            ctx.restore();
+
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            for (let spawn of pendingSpawns) {
+                let progress = 1 - (spawn.timer / 60);
+                let radius = progress * 30;
+                let alpha = spawn.timer / 60;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(spawn.x, spawn.y, radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.closePath();
+
+                ctx.beginPath();
+                ctx.arc(spawn.x, spawn.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + alpha * 0.6})`;
+                ctx.fill();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            let currentTotalAngle = obstacle.baseAngle + currentAngleOffset;
+            ctx.save();
+            ctx.translate(obstacle.pivotX, obstacle.pivotY);
+            ctx.rotate(currentTotalAngle);
+            ctx.fillStyle = spinDirection === 1 ? '#ff3366' : '#00e5ff';
+            ctx.shadowColor = spinDirection === 1 ? '#ff3366' : '#00e5ff';
+            ctx.shadowBlur = 18;
+            ctx.fillRect(0, -obstacle.height / 2, obstacle.width, obstacle.height);
+            ctx.restore();
+
+            ctx.beginPath();
+            ctx.arc(obstacle.pivotX, obstacle.pivotY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.closePath();
+
+            for (let ball of balls) {
+                for (let j = 0; j < ball.history.length; j++) {
+                    let pos = ball.history[j];
+                    let ratio = 1 - (j / ball.history.length);
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, ball.radius * ratio * 0.8, 0, Math.PI * 2);
+                    ctx.fillStyle = spinDirection === 1 ? `rgba(255, 51, 102, ${ratio * 0.35})` : `rgba(0, 229, 255, ${ratio * 0.35})`;
+                    ctx.fill();
+                    ctx.closePath();
+                }
+
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.closePath();
+                ctx.shadowBlur = 0;
+            }
+
+            ctx.fillStyle = '#8e8e93';
+            ctx.font = 'bold 13px -apple-system, sans-serif';
+            ctx.fillText(`BALLS: ${balls.length + pendingSpawns.length}`, 20, 35);
+            ctx.fillText(`BEST: ${highScore}`, canvas.width - 90, 35);
+
+            if (isGameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#ffcc00';
+                ctx.font = 'bold 26px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('BALL DRAINED!', canvas.width / 2, canvas.height / 2 - 30);
+
+                ctx.fillStyle = '#8e8e93';
+                ctx.font = '15px -apple-system, sans-serif';
+                ctx.fillText('Tap or Press Space to Restart', canvas.width / 2, canvas.height / 2 + 15);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        resetGame();
+        loop();
+    </script>
+
+</body>
+
+</html>
