@@ -18,6 +18,15 @@
             height: 100vh;
             overflow: hidden;
             touch-action: manipulation;
+
+        padding: 0;
+    	overflow: hidden; /* Prevents scrollbars */
+    	height: 100%;
+    	width: 100%;
+    	position: fixed; /* Anchors the page */
+    	touch-action: none; /* Disables browser-handled zooming and scrolling */
+    	user-select: none; /* Prevents accidental text selection */
+
         }
 
         .phone-frame {
