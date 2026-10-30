@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" fill="none">
+  <title>A study in play</title>
+  <desc>An original illustration of playing cards, a pawn and a token, with a W mark for Wing.</desc>
+  <path d="M108 381h426v35H108z" fill="#D9E2EC"/>
+  <g transform="rotate(-16 270 240)">
+    <rect x="138" y="88" width="216" height="302" rx="12" fill="#CBD5E1"/>
+    <path d="M164 116h164v246H164z" fill="#F8FAFC"/>
+    <path d="m198 173 22 48 25-60 25 60 22-48" stroke="#94A3B8" stroke-width="9" stroke-linejoin="round"/>
+  </g>
+  <g transform="rotate(12 362 250)">
+    <rect x="255" y="83" width="216" height="302" rx="12" fill="#0369A1"/>
+    <path d="M282 110h162v248H282z" fill="#E0F2FE"/>
+    <path d="m310 148 18 40 21-50 21 50 18-40" stroke="#0369A1" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="397" cy="308" r="17" fill="#0369A1"/>
+  </g>
+  <rect x="202" y="104" width="216" height="302" rx="12" fill="#0F172A"/>
+  <rect x="224" y="126" width="172" height="258" rx="4" fill="#FFFFFF"/>
+  <path d="m253 227 24 63 33-77 33 77 24-63" stroke="#0369A1" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="245" cy="149" r="6" fill="#0F172A"/>
+  <circle cx="375" cy="361" r="6" fill="#0F172A"/>
+  <path d="M111 394c0-17 11-27 25-33l11-64h29l12 64c14 6 25 16 25 33v12H111z" fill="#0369A1"/>
+  <circle cx="161" cy="277" r="27" fill="#0F172A"/>
+  <path d="M119 407h85v12h-85z" fill="#0F172A"/>
+  <ellipse cx="477" cy="409" rx="62" ry="19" fill="#0F172A"/>
+  <path d="M415 384h124v24c-6 21-118 21-124 0z" fill="#334155"/>
+  <ellipse cx="477" cy="383" rx="62" ry="22" fill="#CBD5E1"/>
+  <ellipse cx="477" cy="383" rx="41" ry="13" fill="#F8FAFC"/>
+  <path d="m455 382 11 8 11-13 11 13 11-8" stroke="#0369A1" stroke-width="4" stroke-linejoin="round"/>
+</svg>

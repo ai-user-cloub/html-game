@@ -272,7 +272,7 @@ const canvas = document.getElementById('gameCanvas');
         }
 
         function draw() {
-            ctx.fillStyle = '#26000c';
+            ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // --- MASSIVE BACKGROUND SCORE ---
@@ -284,7 +284,7 @@ const canvas = document.getElementById('gameCanvas');
             ctx.fillText(score, canvas.width / 2, canvas.height / 2 - 40);
             ctx.restore();
 
-            ctx.strokeStyle = '#6c3345';
+            ctx.strokeStyle = '#334155';
             ctx.lineWidth = 4;
             ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
@@ -296,7 +296,7 @@ const canvas = document.getElementById('gameCanvas');
                 ctx.save();
                 ctx.beginPath();
                 ctx.arc(spawn.x, spawn.y, radius, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(245, 243, 239, ${alpha})`;
+                ctx.strokeStyle = `rgba(226, 232, 240, ${alpha})`;
                 ctx.lineWidth = 3;
                 ctx.stroke();
                 ctx.closePath();
@@ -313,8 +313,8 @@ const canvas = document.getElementById('gameCanvas');
             ctx.save();
             ctx.translate(obstacle.pivotX, obstacle.pivotY);
             ctx.rotate(currentTotalAngle);
-            ctx.fillStyle = spinDirection === 1 ? '#ffb8dc' : '#f5f3ef';
-            ctx.shadowColor = spinDirection === 1 ? '#ffb8dc' : '#f5f3ef';
+            ctx.fillStyle = spinDirection === 1 ? '#38bdf8' : '#e2e8f0';
+            ctx.shadowColor = spinDirection === 1 ? '#38bdf8' : '#e2e8f0';
             ctx.shadowBlur = 18;
             ctx.fillRect(0, -obstacle.height / 2, obstacle.width, obstacle.height);
             ctx.restore();
@@ -331,7 +331,7 @@ const canvas = document.getElementById('gameCanvas');
                     let ratio = 1 - (j / ball.history.length);
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, ball.radius * ratio * 0.8, 0, Math.PI * 2);
-                    let tailColor = ball.invincibleTimer > 0 ? `rgba(255, 204, 0, ${ratio * 0.4})` : (spinDirection === 1 ? `rgba(255, 184, 220, ${ratio * 0.35})` : `rgba(245, 243, 239, ${ratio * 0.35})`);
+                    let tailColor = ball.invincibleTimer > 0 ? `rgba(255, 204, 0, ${ratio * 0.4})` : (spinDirection === 1 ? `rgba(56, 189, 248, ${ratio * 0.35})` : `rgba(226, 232, 240, ${ratio * 0.35})`);
                     ctx.fillStyle = tailColor;
                     ctx.fill();
                     ctx.closePath();

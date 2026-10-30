@@ -17,3 +17,7 @@ Cover image sources:
 - `samurai-vassal.jpg`: [The Dice Tower game page](https://dicetower.com/board-game/234101).
 
 Cover artwork belongs to its respective owners. These images illustrate the credited games; the portfolio does not claim Kenneth created the artwork.
+
+## Portfolio vector graphics
+
+play-study.svg is an original card, pawn, and token illustration created for this portfolio on 2026-10-30. The W mark is also used in favicon.svg and the site header. The graphic illustrates tabletop play; it does not depict a specific published game's components.
