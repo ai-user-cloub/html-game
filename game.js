@@ -10,17 +10,27 @@ const canvas = document.getElementById('gameCanvas');
         const overlay = document.getElementById('overlay');
         const playButton = document.getElementById('playButton');
         const pauseButton = document.getElementById('pauseButton');
+        const spinButton = document.getElementById('spinButton');
+        const gameStatus = document.getElementById('gameStatus');
+        function setText(id, value) {
+            const element = document.getElementById(id);
+            if (element.textContent !== String(value)) element.textContent = value;
+        }
         function syncUI() {
-            document.getElementById('score').textContent = String(score).padStart(2, '0');
-            document.getElementById('best').textContent = String(Math.max(score, highScore)).padStart(2, '0');
-            document.getElementById('balls').textContent = balls.length + pendingSpawns.length;
-            document.getElementById('threshold').textContent = nextBallThreshold;
-            document.getElementById('progress').style.width = Math.min(100, score / nextBallThreshold * 100) + '%';
+            setText('score', String(score).padStart(2, '0'));
+            setText('best', String(Math.max(score, highScore)).padStart(2, '0'));
+            setText('balls', balls.length + pendingSpawns.length);
+            setText('threshold', nextBallThreshold);
+            const progress = document.getElementById('progress');
+            const scale = 'scaleX(' + Math.min(1, score / nextBallThreshold) + ')';
+            if (progress.style.transform !== scale) progress.style.transform = scale;
         }
         function begin() {
             resetGame(); started = true; paused = false;
             overlay.hidden = true;
             pauseButton.disabled = false; pauseButton.textContent = 'Pause';
+            spinButton.disabled = false;
+            gameStatus.textContent = 'Game started. Focus the table and press Space, or use Spin paddle.';
             canvas.focus({preventScroll:true});
         }
         playButton.addEventListener('click', () => paused ? setPaused(false) : begin());
@@ -29,6 +39,9 @@ const canvas = document.getElementById('gameCanvas');
             if (!started || isGameOver) return;
             paused = value; isHolding = false;
             pauseButton.textContent = paused ? 'Resume' : 'Pause';
+            spinButton.disabled = paused;
+            gameStatus.textContent = paused ? 'Game paused.' : 'Game resumed.';
+            if (!paused) canvas.focus({preventScroll:true});
             overlay.hidden = !paused;
             if (paused) {
                 document.getElementById('overlayTitle').textContent = 'Take a breath.';
@@ -37,7 +50,7 @@ const canvas = document.getElementById('gameCanvas');
             }
         }
         pauseButton.addEventListener('click', () => setPaused(!paused));
-        playButton.addEventListener('click', () => canvas.focus({preventScroll:true}));
+        spinButton.addEventListener('click', () => { triggerAction(); canvas.focus({preventScroll:true}); });
         document.addEventListener('visibilitychange', () => { if(document.hidden) setPaused(true); });
         window.addEventListener('blur', () => { isHolding = false; setPaused(true); });
         window.addEventListener('pointerup', () => { isHolding = false; });
@@ -246,6 +259,8 @@ const canvas = document.getElementById('gameCanvas');
                         if (score > highScore) highScore = score;
                         try { localStorage.setItem('pivot-best', String(highScore)); } catch {}
                         pauseButton.disabled = true;
+                        spinButton.disabled = true;
+                        gameStatus.textContent = 'Round over. Score ' + score + '. Personal best ' + highScore + '.';
                         overlay.hidden = false;
                         document.getElementById('overlayTitle').textContent = 'One more round?';
                         document.getElementById('overlayText').textContent = 'You scored ' + score + '. A little timing goes a long way.';
@@ -257,7 +272,7 @@ const canvas = document.getElementById('gameCanvas');
         }
 
         function draw() {
-            ctx.fillStyle = '#162524';
+            ctx.fillStyle = '#26000c';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // --- MASSIVE BACKGROUND SCORE ---
@@ -269,7 +284,7 @@ const canvas = document.getElementById('gameCanvas');
             ctx.fillText(score, canvas.width / 2, canvas.height / 2 - 40);
             ctx.restore();
 
-            ctx.strokeStyle = '#30413d';
+            ctx.strokeStyle = '#6c3345';
             ctx.lineWidth = 4;
             ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
@@ -281,7 +296,7 @@ const canvas = document.getElementById('gameCanvas');
                 ctx.save();
                 ctx.beginPath();
                 ctx.arc(spawn.x, spawn.y, radius, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(157, 201, 180, ${alpha})`;
+                ctx.strokeStyle = `rgba(245, 243, 239, ${alpha})`;
                 ctx.lineWidth = 3;
                 ctx.stroke();
                 ctx.closePath();
@@ -298,8 +313,8 @@ const canvas = document.getElementById('gameCanvas');
             ctx.save();
             ctx.translate(obstacle.pivotX, obstacle.pivotY);
             ctx.rotate(currentTotalAngle);
-            ctx.fillStyle = spinDirection === 1 ? '#e9a16e' : '#9dc9b4';
-            ctx.shadowColor = spinDirection === 1 ? '#e9a16e' : '#9dc9b4';
+            ctx.fillStyle = spinDirection === 1 ? '#ffb8dc' : '#f5f3ef';
+            ctx.shadowColor = spinDirection === 1 ? '#ffb8dc' : '#f5f3ef';
             ctx.shadowBlur = 18;
             ctx.fillRect(0, -obstacle.height / 2, obstacle.width, obstacle.height);
             ctx.restore();
@@ -316,7 +331,7 @@ const canvas = document.getElementById('gameCanvas');
                     let ratio = 1 - (j / ball.history.length);
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, ball.radius * ratio * 0.8, 0, Math.PI * 2);
-                    let tailColor = ball.invincibleTimer > 0 ? `rgba(255, 204, 0, ${ratio * 0.4})` : (spinDirection === 1 ? `rgba(233, 161, 110, ${ratio * 0.35})` : `rgba(157, 201, 180, ${ratio * 0.35})`);
+                    let tailColor = ball.invincibleTimer > 0 ? `rgba(255, 204, 0, ${ratio * 0.4})` : (spinDirection === 1 ? `rgba(255, 184, 220, ${ratio * 0.35})` : `rgba(245, 243, 239, ${ratio * 0.35})`);
                     ctx.fillStyle = tailColor;
                     ctx.fill();
                     ctx.closePath();
